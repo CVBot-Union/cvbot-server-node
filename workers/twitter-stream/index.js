@@ -1,0 +1,118 @@
+require('../../starups')
+const Twit = require('twit');
+const { Tweet,Tracker } = require('../../models');
+const webhookInstance = require('../../services/webhook/hookModifier');
+const mediaDownloader = require('./downloadMedia');
+
+const T = new Twit({
+  consumer_key: process.env.TW_CKEY,
+  consumer_secret: process.env.TW_CS,
+  access_token: process.env.TW_AT,
+  access_token_secret: process.env.TW_ATS,
+  timeout_ms: 60 * 1000,  // optional HTTP request timeout to apply to all requests.
+  strictSSL: true,     // optional - requires SSL certificates to be valid.
+});
+
+const getFollowsIDs = async () => {
+  let followIDs = [];
+  let result = await Tracker.find().select('uid');
+  result.forEach(d => {
+    followIDs.push(d.uid)
+  });
+  console.info('[INFO] Reloaded follows id array now length: ' + followIDs.length);
+  return followIDs;
+};
+
+const handleTweet = (tweet) => {
+  if(tweet === undefined) {
+    return;
+  }
+  // Check if tweet is retweeted
+  if(typeof tweet.retweeted_status === 'object')
+  {
+    handleTweet(tweet.retweeted_status);
+  }
+  // Check if tweet is retweet with comment aka. quote
+  if(tweet.is_quote_status)
+  {
+    handleTweet(tweet.quoted_status)
+  }
+  // Check if tweet is a reply to a parent tweet
+  else if(tweet.in_reply_to_status_id_str !== null)
+  {
+    handleReplyTweet(tweet.in_reply_to_status_id_str)
+  }
+  if (tweet.truncated) { // if the tweet is the new version of 280 char, get from extended_entities
+    if(tweet.extended_tweet === undefined){
+      return ;
+    }
+    if(tweet.extended_tweet.extended_entities !== undefined){
+      mediaDownloader(tweet.extended_tweet.extended_entities.media);
+    }
+  } else if (tweet.extended_entities !== undefined){
+    mediaDownloader(tweet.extended_entities.media);
+  }
+};
+
+const handleReplyTweet = (id_str) => {
+  T.get('/statuses/show/:id', { id: id_str},(err,data)=>{
+    if(err){
+      console.error('[ERROR] Can not get tweet ' + id_str)
+    }else{
+      Tweet.create({...data, is_feed: false},(err,docs)=>{
+        if(err){
+          console.error(err);
+          console.error("[ERROR] Failed to store tweet " + id_str)
+        }else{
+          handleTweet(docs)
+        }
+      })
+    }
+  })
+}
+
+(async() => {
+
+  const followIDs = await getFollowsIDs();
+
+  const stream = T.stream('statuses/filter', {
+    follow: followIDs,
+    filter_level: 'none'
+  });
+
+  stream.on('tweet', (tweet) => {
+    console.log(followIDs.indexOf(tweet.user.id_str))
+    if (followIDs.indexOf(tweet.user.id_str) === -1) {
+      console.warn(`[WARN] Rejected Tweet from ${tweet.user.screen_name}(${tweet.user.id_str}), not in list.`)
+      return;
+    }
+
+    Tweet.create({...tweet}, (err, docs)=>{
+      if(err){
+        console.error(err);
+        return;
+      }
+      webhookInstance.trigger({
+        type: 'tweet',
+        data: {tweet}
+      })
+      console.info(`[INFO] New tweet from ${docs.user.screen_name} stored with id ${docs.id_str}`);
+      handleTweet(tweet);
+    })
+
+  })
+
+  stream.on('disconnect', () => {
+    console.error(`[INFO] Twitter Stream Disconnected`);
+  })
+
+  stream.on('connected', (event) => {
+    console.info('[INFO] Connected to Twitter Stream')
+    console.info(`[INFO] Stream with current Follow IDs: ${event.request.body}`)
+  })
+
+  stream.on('error', (event) => {
+    console.error(`[ERROR] ${event.message} with reply ${event.twitterReply}`)
+  })
+
+})();
