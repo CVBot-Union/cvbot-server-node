@@ -23,19 +23,20 @@ const getFollowsIDs = async () => {
   return followIDs;
 };
 
-const handleTweet = (tweet) => {
+const handleTweet = async (tweet) => {
   if(tweet === undefined) {
+    console.warn('[Warn] Got a tweet with nothing inside, skipping, recursion fault?')
     return;
   }
   // Check if tweet is retweeted
   if(typeof tweet.retweeted_status === 'object')
   {
-    handleTweet(tweet.retweeted_status);
+    await handleTweet(tweet.retweeted_status);
   }
   // Check if tweet is retweet with comment aka. quote
   if(tweet.is_quote_status)
   {
-    handleTweet(tweet.quoted_status)
+    await handleTweet(tweet.quoted_status)
   }
   // Check if tweet is a reply to a parent tweet
   else if(tweet.in_reply_to_status_id_str !== null)
@@ -47,10 +48,10 @@ const handleTweet = (tweet) => {
       return ;
     }
     if(tweet.extended_tweet.extended_entities !== undefined){
-      mediaDownloader(tweet.extended_tweet.extended_entities.media);
+      await mediaDownloader(tweet.extended_tweet.extended_entities.media);
     }
   } else if (tweet.extended_entities !== undefined){
-    mediaDownloader(tweet.extended_entities.media);
+   await mediaDownloader(tweet.extended_entities.media);
   }
 };
 
@@ -59,12 +60,12 @@ const handleReplyTweet = (id_str) => {
     if(err){
       console.error('[ERROR] Can not get tweet ' + id_str)
     }else{
-      Tweet.create({...data, is_feed: false},(err,docs)=>{
+      Tweet.create({...data, is_feed: false}, async (err,docs)=>{
         if(err){
           console.error(err);
           console.error("[ERROR] Failed to store tweet " + id_str)
         }else{
-          handleTweet(docs)
+          await handleTweet(docs)
         }
       })
     }
@@ -81,23 +82,23 @@ const handleReplyTweet = (id_str) => {
   });
 
   stream.on('tweet', (tweet) => {
-    console.log(followIDs.indexOf(tweet.user.id_str))
     if (followIDs.indexOf(tweet.user.id_str) === -1) {
-      console.warn(`[WARN] Rejected Tweet from ${tweet.user.screen_name}(${tweet.user.id_str}), not in list.`)
+      console.debug(`[Debug] Rejected Tweet from ${tweet.user.screen_name}(${tweet.user.id_str}), not in list.`)
       return;
     }
 
-    Tweet.create({...tweet}, (err, docs)=>{
+    Tweet.create({...tweet}, async (err, docs)=>{
       if(err){
         console.error(err);
         return;
       }
+      const groupLookup = await Tracker.findOne({ 'uid': tweet.user.id_str }).select('qqGroups');
       webhookInstance.trigger({
         type: 'tweet',
-        data: {tweet}
+        data: { tweet:{ ...tweet, qqGroups: groupLookup.qqGroups} }
       })
       console.info(`[INFO] New tweet from ${docs.user.screen_name} stored with id ${docs.id_str}`);
-      handleTweet(tweet);
+      await handleTweet(tweet);
     })
 
   })

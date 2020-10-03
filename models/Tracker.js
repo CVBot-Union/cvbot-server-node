@@ -14,6 +14,9 @@ const TrackerSchema = new mongoose.Schema({
   groups: [{
     type: mongoose.Types.ObjectId
   }],
+  qqGroups: [{
+    type: String
+  }]
 });
 
 const Tracker = mongoose.model('tracker', TrackerSchema);
