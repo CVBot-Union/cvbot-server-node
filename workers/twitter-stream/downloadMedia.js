@@ -27,7 +27,7 @@ module.exports = async (entities_list)=>{
 
     if(d.type === 'video'){
       await downloadImage(d);
-      await downloadVideo(d.video_info.variants[d.video_info.variants.length - 1].url,d.id_str);
+      await downloadVideo(d.video_info.variants,d.id_str);
       console.log('[INFO] Downloaded media(video) from ' + d.media_url_https);
     }
     else if(d.type === 'photo'){
@@ -64,7 +64,7 @@ const downloadImage = async ({media_url_https,id_str }) =>{
       }
     });
     const imgBuff = new Buffer.from(response.data, 'binary');
-    const imgUploadParam = { ...bucketParams, ACL: 'private', Key: 'images/'+ id_str + '.png', Body: imgBuff };
+    const imgUploadParam = { ...bucketParams, ACL: 'private', Key: 'images/'+ id_str + '.png', Body: imgBuff, ContentType: 'application/x-png' };
     return await s3.upload(imgUploadParam).promise();
   }catch (e) {
     console.error(e);
@@ -72,7 +72,12 @@ const downloadImage = async ({media_url_https,id_str }) =>{
   }
 };
 
-const downloadVideo = async (video_url, id_str)=>{
+const downloadVideo = async (videoArr, id_str)=>{
+  const stripedVideoArr = videoArr.filter(obj => obj.content_type === "video/mp4");
+  stripedVideoArr.sort((a,b) => {
+    return b.bitrate - a.bitrate
+  });
+  const video_url = stripedVideoArr[0].url
   try{
     const response = await axios({
       url: video_url,
@@ -83,7 +88,7 @@ const downloadVideo = async (video_url, id_str)=>{
       }
     });
     const videoBuff = new Buffer.from(response.data, 'binary');
-    const vidUploadParam = { ...bucketParams, ACL: 'private', Key:'videos/'+ id_str + '.mp4', Body: videoBuff };
+    const vidUploadParam = { ...bucketParams, ACL: 'private', Key:'videos/'+ id_str + '.mp4', Body: videoBuff, ContentType: 'video/mp4' };
     return await s3.upload(vidUploadParam).promise();
   } catch(e) {
     console.error('[ERROR] Fail to download media(video) from twitter.')

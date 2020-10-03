@@ -92,10 +92,10 @@ const handleReplyTweet = (id_str) => {
         console.error(err);
         return;
       }
-      const groupLookup = await Tracker.findOne({ 'uid': tweet.user.id_str }).select('qqGroups');
+      const groupLookup = await Tracker.findOne({ 'uid': tweet.user.id_str }).select('qqGroups nickname');
       webhookInstance.trigger({
         type: 'tweet',
-        data: { tweet:{ ...tweet, qqGroups: groupLookup.qqGroups} }
+        data: { tweet:{ ...tweet, qqGroups: groupLookup.qqGroups, initUserNickname: groupLookup.nickname} }
       })
       console.info(`[INFO] New tweet from ${docs.user.screen_name} stored with id ${docs.id_str}`);
       await handleTweet(tweet);

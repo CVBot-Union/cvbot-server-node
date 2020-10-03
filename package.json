@@ -6,7 +6,8 @@
     "start": "node ./bin/www --env=prod",
     "dev": "nodemon ./bin/www --env=dev",
     "start:twi-stream": "node ./workers/twitter-stream/index.js --env=prod",
-    "start:twi-stream:dev": "node ./workers/twitter-stream/index.js --env=dev"
+    "start:twi-stream:dev": "node ./workers/twitter-stream/index.js --env=dev",
+    "start:twi-stream:stage": "node ./workers/twitter-stream/index.js --env=stage"
   },
   "dependencies": {
     "aws-sdk": "^2.762.0",
@@ -22,7 +23,6 @@
     "mongoose": "^5.10.7",
     "morgan": "~1.9.1",
     "node-webhooks": "^1.4.2",
-    "redis": "^3.0.2",
     "twit": "^2.2.11"
   },
   "devDependencies": {
