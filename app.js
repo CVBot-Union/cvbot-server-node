@@ -1,14 +1,15 @@
 const createError = require('http-errors');
 const express = require('express');
-const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
+const cors = require('cors')
 
 const routers = require('./routes');
 
 const app = express();
 
 app.use(logger('dev'))
+  .use(cors())
   .use(express.json())
   .use(express.urlencoded({ extended: false }))
   .use(cookieParser());

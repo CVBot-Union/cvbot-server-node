@@ -1,4 +1,5 @@
 const webhookInstance = require('./index');
+const { WebhookLog } = require('../../models')
 
 module.exports = {
     add: (url) => {
@@ -16,7 +17,8 @@ module.exports = {
         console.info('[INFO] Deleted ' + url + ' from hook pool.');
     },
     trigger: (data)=>{
-        webhookInstance.trigger('pool', data)
+        webhookInstance.trigger('pool', data);
         console.info('[INFO] Triggered Webhook, announcing in hook pool');
+        WebhookLog.create({ sentAt: new Date(), data, sentHost: webhookInstance.getDB() })
     }
 }

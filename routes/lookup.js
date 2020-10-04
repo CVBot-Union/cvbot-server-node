@@ -1,8 +1,18 @@
 const express = require('express');
+const Twit = require('twit');
 const router = express.Router();
 const FwButton = require('./../providers/followbutton');
 const { handler } = require('../middlewares')
 const _fwButton = new FwButton();
+
+const T = new Twit({
+  consumer_key: process.env.TW_CKEY,
+  consumer_secret: process.env.TW_CS,
+  access_token: process.env.TW_AT,
+  access_token_secret: process.env.TW_ATS,
+  timeout_ms: 60 * 1000,  // optional HTTP request timeout to apply to all requests.
+  strictSSL: true,     // optional - requires SSL certificates to be valid.
+});
 
 router.get('/id/:id', (req, res) => {
   const { id } = req.params;
@@ -28,6 +38,12 @@ router.get('/display_name/:name', (req, res) => {
     handler(res, e.toString(), null);
     throw e;
   });
+});
+
+router.get('/avatar/id/:id', async (req,res) => {
+    T.get('users/show', { user_id: req.params.id}, (err,data)=>{
+      res.redirect(data.profile_image_url_https)
+    })
 });
 
 module.exports = router;

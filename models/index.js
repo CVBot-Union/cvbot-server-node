@@ -3,5 +3,6 @@ module.exports = {
   Tracker: require('./Tracker').Tracker,
   Tweet: require('./Tweet').Tweet,
   User: require('./User').User,
-  Webhook: require('./Webhook').Webhook
+  Webhook: require('./Webhook').Webhook,
+  WebhookLog: require('./WebhookLog').WebhookLog
 }
