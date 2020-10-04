@@ -24,6 +24,17 @@ router.post('/', async (req, res) => {
   }
 });
 
+router.get('/:uid', async (req,res) => {
+  const { uid } = req.params;
+  try{
+    const doc = await Tracker.findOne({ uid });
+    handler(res, null, doc);
+  }catch (e) {
+    handler(res, e.toString(), null);
+    throw e;
+  }
+});
+
 router.patch('/:uid', async (req,res) => {
     const { uid } = req.params;
     const updated_info = req.body;
