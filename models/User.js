@@ -14,7 +14,11 @@ const UserSchema = mongoose.Schema({
   optedOutTwitterIDs: [{
     type: String,
     required: true
-  }]
+  }],
+  userLevel: {
+    type: Number,
+    default: 0
+  }
 });
 
 const User = mongoose.model('User', UserSchema);

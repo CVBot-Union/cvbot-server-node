@@ -5,5 +5,6 @@ module.exports = {
   rtgroupRouter: require('./rtgroup'),
   webhookRouter: require('./webhook'),
   trackerRouter: require('./tracker'),
-  lookupRouter: require('./lookup')
+  lookupRouter: require('./lookup'),
+  authRouter: require('./auth')
 }
