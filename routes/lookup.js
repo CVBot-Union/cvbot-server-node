@@ -1,5 +1,6 @@
 const express = require('express');
 const Twit = require('twit');
+const axios = require('axios');
 const router = express.Router();
 const FwButton = require('./../providers/followbutton');
 const { handler } = require('../middlewares')
@@ -42,7 +43,19 @@ router.get('/display_name/:name', (req, res) => {
 
 router.get('/avatar/id/:id', async (req,res) => {
     T.get('users/show', { user_id: req.params.id}, (err,data)=>{
-      res.redirect(data.profile_image_url_https)
+      axios({
+        method: 'get',
+        url: data.profile_image_url_https,
+        responseType: 'arraybuffer'
+      })
+      .then(function (response) {
+        var headers = {'Content-Type': 'image/png'};
+        res.writeHead(200, headers);
+        res.end(response.data, 'binary');
+      })
+      .catch(function (error) {
+        res.send("error:" + error);
+      });
     })
 });
 
