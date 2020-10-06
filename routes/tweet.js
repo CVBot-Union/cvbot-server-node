@@ -15,7 +15,7 @@ router.get('/', async (req,res) => {
     pageInt = 1;
   }
   if(isNaN(limitInt)) {
-    limitInt = 3;
+    limitInt = 10;
   }
 
   try{
@@ -43,5 +43,6 @@ router.get('/:id', async (req,res) => {
     throw e;
   }
 });
+
 
 module.exports = router;
