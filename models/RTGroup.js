@@ -32,7 +32,7 @@ const RTGroupSchema = mongoose.Schema({
   property: {
     themeColor: {
       type: String,
-      default: "29b6f6"
+      default: "#29b6f6"
     },
     icon: {
       type: String,

@@ -2,9 +2,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const aws = require('aws-sdk');
 const multer = require('multer');
+const path = require('path');
 const multerS3 = require('multer-s3');
 const { handler } = require('../middlewares');
-const { RTGroup, User } = require('../models')
+const { RTGroup, User, Tracker } = require('../models')
 const router = express.Router();
 
 const s3 = new aws.S3({
@@ -14,6 +15,16 @@ const s3 = new aws.S3({
 })
 
 const uploadGroupIcon = multer({
+  fileFilter: function (req, file, callback) {
+    var ext = path.extname(file.originalname);
+    if(ext !== '.png') {
+      return callback(new Error('Only png are allowed'))
+    }
+    callback(null, true)
+  },
+  limits: {
+    fileSize: (2 * 1024 * 1024)
+  },
   storage: multerS3({
     s3,
     contentType: multerS3.AUTO_CONTENT_TYPE,
@@ -36,9 +47,9 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req,res) => {
-  const { name } = req.body;
+  const { name, description, members, leaders } = req.body;
   try {
-    const doc = await  RTGroup.create({ name });
+    const doc = await  RTGroup.create({ name, description, members, leaders });
     handler(res, null, doc);
   }catch (e) {
     handler(res, e.toString(), null);
@@ -80,6 +91,29 @@ router.get('/:id', async (req,res) => {
       handler(res, e.toString(), null);
       throw e;
     }
+});
+
+router.delete('/:id', async (req,res) => {
+  const { id } = req.params;
+  try {
+    const deleteGroup = await RTGroup.findOneAndDelete({ _id: mongoose.Types.ObjectId(id) });
+    if(deleteGroup === null) {
+      handler(res, "Group Not Found.", null);
+      return;
+    }
+    const deleteTracker = await Tracker.update({} , {
+      $pull: {
+        groups: deleteGroup._id
+      }
+    },{ multi: true});
+    handler(res, null, {
+      group: deleteGroup,
+      trackers: deleteTracker
+    })
+  } catch (e) {
+    handler(res, e.toString(), null);
+    throw e;
+  }
 });
 
 router.post('/join/:groupID', async (req,res) => {

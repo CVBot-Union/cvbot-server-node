@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
 
 router.get('/all', guard.checkIfAdmin, async(req, res) => {
   try {
-    const docs = await User.find({ }).select('username');
+    const docs = await User.find({  }).select('username');
     handler(res, null, docs);
   }catch (e) {
     handler(res, e.toString(), null);
@@ -38,17 +38,24 @@ router.get('/:id', guard.checkIfAdmin, async (req,res) => {
     }
 });
 
+router.get('/:id/meta', guard.checkIfAdmin, async (req,res) => {
+  const { id } = req.params;
+  try{
+    const docs = await User.findOne({  _id: mongoose.Types.ObjectId(id) }).select('username');
+    handler(res, null, docs);
+  }catch (e) {
+    handler(res, e.toString(), null);
+    throw e;
+  }
+});
+
 // todo: resolve mongo key error
 router.delete('/:id', guard.checkIfAdmin, async(req, res) => {
   const { id } = req.params;
   try{
-    const deleteUser = await User.findOneAndDelete({ _id: mongoose.Types.ObjectId(id) }, { multi: false});
-    const deleteRTGroup = await RTGroup.update({},{
-      $pull: { 'members.id': deleteUser._id, 'leaders.id': deleteUser._id }
-    }, { multi: true})
+    const deleteUser = await User.deleteOne({ _id: mongoose.Types.ObjectId(id) }, { multi: false});
     handler(res, null, {
-      user: deleteUser,
-      rtgroups: deleteRTGroup
+      user: deleteUser
     })
   }catch (e) {
     handler(res, e.toString(), null);
