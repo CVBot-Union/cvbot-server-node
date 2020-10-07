@@ -49,7 +49,6 @@ router.get('/:id/meta', guard.checkIfAdmin, async (req,res) => {
   }
 });
 
-// todo: resolve mongo key error
 router.delete('/:id', guard.checkIfAdmin, async(req, res) => {
   const { id } = req.params;
   try{

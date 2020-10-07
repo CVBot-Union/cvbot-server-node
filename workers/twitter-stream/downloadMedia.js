@@ -10,6 +10,7 @@ const s3 = new AWS.S3({
 
 const bucketParams = {
   Bucket: process.env.S3_BUCKET,
+  ACL: process.env.NODE_ENV === 'development' ? 'public-read' : 'private'
 }
 
 module.exports = async (entities_list)=>{
@@ -64,7 +65,7 @@ const downloadImage = async ({media_url_https,id_str }) =>{
       }
     });
     const imgBuff = new Buffer.from(response.data, 'binary');
-    const imgUploadParam = { ...bucketParams, ACL: 'private', Key: 'images/'+ id_str + '.png', Body: imgBuff, ContentType: 'application/x-png' };
+    const imgUploadParam = { ...bucketParams, Key: 'images/'+ id_str + '.png', Body: imgBuff, ContentType: 'application/x-png' };
     return await s3.upload(imgUploadParam).promise();
   }catch (e) {
     console.error(e);
@@ -88,7 +89,7 @@ const downloadVideo = async (videoArr, id_str)=>{
       }
     });
     const videoBuff = new Buffer.from(response.data, 'binary');
-    const vidUploadParam = { ...bucketParams, ACL: 'private', Key:'videos/'+ id_str + '.mp4', Body: videoBuff, ContentType: 'video/mp4' };
+    const vidUploadParam = { ...bucketParams, Key:'videos/'+ id_str + '.mp4', Body: videoBuff, ContentType: 'video/mp4' };
     return await s3.upload(vidUploadParam).promise();
   } catch(e) {
     console.error('[ERROR] Fail to download media(video) from twitter.')
