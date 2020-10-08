@@ -49,7 +49,9 @@ router.get('/', async (req, res) => {
 router.post('/', async (req,res) => {
   const { name, description, members, leaders } = req.body;
   try {
-    const doc = await  RTGroup.create({ name, description, members, leaders });
+    const doc = await  RTGroup.create({ name, property: {
+      description
+      }, members, leaders });
     handler(res, null, doc);
   }catch (e) {
     handler(res, e.toString(), null);
