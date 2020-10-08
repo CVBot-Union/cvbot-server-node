@@ -1,6 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { Tweet,Tracker,RTGroup } = require('../models');
+const { Tweet,Tracker } = require('../models');
 const { handler,guard } = require('../middlewares')
 const router = express.Router();
 
@@ -19,7 +19,7 @@ router.get('/', async (req,res) => {
   }
 
   try{
-    const filteredUser = await Tracker.find({ groups: mongoose.Types.ObjectId(group) }).select('uid');
+    const filteredUser = await Tracker.find({ 'groups.id': mongoose.Types.ObjectId(group) }).select('uid');
     const filterUid = filteredUser.map(x=> x.uid);
     const docs = await Tweet
     .find({ 'user.id_str':  { $in: filterUid } })
@@ -44,6 +44,19 @@ router.get('/:id', async (req,res) => {
   }
 });
 
+router.get('/:id/translations', async (req,res) => {
+  const { id } = req.params;
+  try{
+    const doc = await Tweet.findOne({
+      id_str: id
+    }).select('translations');
+    handler(res, null, doc);
+  }catch (e) {
+    handler(res, e.toString(), null);
+    throw e;
+  }
+});
+
 router.put('/:id/translation', guard.checkIfUserIsInSessionGroup, async (req,res) => {
   const { id } = req.params;
   const { translationContent, sessionGroupID } = req.body;
@@ -55,7 +68,8 @@ router.put('/:id/translation', guard.checkIfUserIsInSessionGroup, async (req,res
           author: {
             id: mongoose.Types.ObjectId(req.user._id),
             groupID: mongoose.Types.ObjectId(sessionGroupID)
-          }
+          },
+          createdAt: new Date()
         }
       }
     });

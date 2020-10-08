@@ -12,7 +12,13 @@ const TrackerSchema = new mongoose.Schema({
     type: String
   },
   groups: [{
-    type: mongoose.Types.ObjectId
+    id: {
+      type: mongoose.Types.ObjectId
+    },
+    nickname: {
+      type: String,
+      default: ''
+    }
   }],
   qqGroups: [{
     type: String

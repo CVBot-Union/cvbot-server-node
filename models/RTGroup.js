@@ -41,6 +41,10 @@ const RTGroupSchema = mongoose.Schema({
     description: {
       type: String,
       default: "RTGroup"
+    },
+    templateFormat: {
+      type: String,
+      default: ""
     }
   }
 });

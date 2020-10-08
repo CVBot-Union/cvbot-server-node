@@ -38,7 +38,7 @@ router.get('/:id', guard.checkIfAdmin, async (req,res) => {
     }
 });
 
-router.get('/:id/meta', guard.checkIfAdmin, async (req,res) => {
+router.get('/:id/meta', async (req,res) => {
   const { id } = req.params;
   try{
     const docs = await User.findOne({  _id: mongoose.Types.ObjectId(id) }).select('username');

@@ -93,6 +93,23 @@ router.get('/:id', async (req,res) => {
     }
 });
 
+router.get('/:id/meta', async (req,res) => {
+  const { id } = req.params;
+  try {
+    const doc = await RTGroup.findOne({ _id: mongoose.Types.ObjectId(id)}).select('name property');
+    let userKV = await Tracker.find({ groups: { $elemMatch: { id: doc._id } } }).select('groups');
+    userKV = userKV.map(elm => {
+      return elm.groups.filter(group => {
+        return group.id + '' === doc._id + '';
+      })[0];
+    });
+    handler(res,null, {group: doc, userKV: userKV});
+  }catch (e) {
+    handler(res, e.toString(), null);
+    throw e;
+  }
+});
+
 router.delete('/:id', async (req,res) => {
   const { id } = req.params;
   try {
@@ -103,7 +120,7 @@ router.delete('/:id', async (req,res) => {
     }
     const deleteTracker = await Tracker.update({} , {
       $pull: {
-        groups: deleteGroup._id
+        'groups.id': deleteGroup._id
       }
     },{ multi: true});
     handler(res, null, {

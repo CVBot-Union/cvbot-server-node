@@ -6,5 +6,6 @@ module.exports = {
   webhookRouter: require('./webhook'),
   trackerRouter: require('./tracker'),
   lookupRouter: require('./lookup'),
-  authRouter: require('./auth')
+  authRouter: require('./auth'),
+  settingRouter: require('./setting')
 }

@@ -22,6 +22,7 @@ app.use('/', routers.rootRouter)
   .use('/tweet', routers.tweetRouter)
   .use('/webhook', routers.webhookRouter)
   .use('/rtgroup', routers.rtgroupRouter)
+  .use('/setting', routers.settingRouter)
   .use('/user', routers.userRouter);
 
 module.exports = app;
