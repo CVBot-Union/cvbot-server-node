@@ -1,6 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { Tweet,Tracker } = require('../models');
+const { Tweet,Tracker,RTGroup, User } = require('../models');
 const { handler,guard } = require('../middlewares')
 const router = express.Router();
 
@@ -35,9 +35,17 @@ router.get('/', async (req,res) => {
 
 router.get('/:id', async (req,res) => {
   const { id } = req.params;
+  const { groupID } = req.query;
   try {
     const doc = await Tweet.findOne({ id_str: id});
-    handler(res, null, doc);
+    const filteredUser = await Tracker.findOne({
+      'groups.id': mongoose.Types.ObjectId(groupID),
+      'uid': doc._doc.user.id_str
+    }).select('name nickname');
+    const mergedResponse = {
+      ...doc._doc, userNickname: filteredUser
+    }
+    handler(res, null, mergedResponse);
   }catch (e) {
     handler(res, e.toString(), null);
     throw e;
@@ -49,8 +57,22 @@ router.get('/:id/translations', async (req,res) => {
   try{
     const doc = await Tweet.findOne({
       id_str: id
-    }).select('translations');
-    handler(res, null, doc);
+    }).select('translations').exec();
+    const lookupedDoc = await doc.translations.map(async (each) => {
+      const userInfo = await User.findOne({_id: each.author.id}).
+          select('username');
+      const rtGroupInfo = await RTGroup.findOne({_id: each.author.groupID}).
+          select('name property');
+      return {
+        ...each._doc,
+        author: {
+          name: userInfo._doc.username,
+          group: rtGroupInfo._doc.name
+        }
+      };
+    });
+    const resolvedTranslations = await Promise.all(lookupedDoc);
+    handler(res, null, resolvedTranslations);
   }catch (e) {
     handler(res, e.toString(), null);
     throw e;

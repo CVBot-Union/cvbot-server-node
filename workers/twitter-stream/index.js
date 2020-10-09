@@ -62,6 +62,10 @@ const handleReplyTweet = (id_str) => {
     }else{
       Tweet.create({...data, is_feed: false}, async (err,docs)=>{
         if(err){
+          if(err.code === 11000) {
+            console.warn("[WARN] Attempted to store a saved tweet, skipping!")
+            return;
+          }
           console.error(err);
           console.error("[ERROR] Failed to store tweet " + id_str)
         }else{
@@ -89,6 +93,10 @@ const handleReplyTweet = (id_str) => {
 
     Tweet.create({...tweet}, async (err, docs)=>{
       if(err){
+        if(err.code === 11000) {
+          console.warn("[WARN] Attempted to store a saved tweet, skipping!")
+          return;
+        }
         console.error(err);
         return;
       }
