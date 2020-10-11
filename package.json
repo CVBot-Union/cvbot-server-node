@@ -5,9 +5,9 @@
   "scripts": {
     "start": "node ./bin/www --env=prod",
     "dev": "nodemon ./bin/www --env=dev",
-    "start:twi-stream": "node ./workers/twitter-stream/index.js --env=prod",
-    "start:twi-stream:dev": "node ./workers/twitter-stream/index.js --env=dev",
-    "start:twi-stream:stage": "node ./workers/twitter-stream/index.js --env=stage"
+    "start:twi-stream": "node workers/twitter-stream/daemon.js --env=prod",
+    "start:twi-stream:dev": "node workers/twitter-stream/daemon.js --env=dev",
+    "start:twi-stream:stage": "node workers/twitter-stream/daemon.js --env=stage"
   },
   "dependencies": {
     "aws-sdk": "^2.762.0",

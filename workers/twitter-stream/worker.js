@@ -76,7 +76,7 @@ const handleReplyTweet = (id_str) => {
   })
 }
 
-(async() => {
+const mainThread = async() => {
 
   const followIDs = await getFollowsIDs();
 
@@ -112,16 +112,17 @@ const handleReplyTweet = (id_str) => {
   })
 
   stream.on('disconnect', () => {
-    console.error(`[INFO] Twitter Stream Disconnected`);
+    process.send(`[INFO] Twitter Stream Disconnected`);
   })
 
   stream.on('connected', (event) => {
-    console.info('[INFO] Connected to Twitter Stream')
-    console.info(`[INFO] Stream with current Follow IDs: ${event.request.body}`)
+    process.send('[INFO] Connected to Twitter Stream')
+    process.send(`[INFO] Stream with current Follow IDs: ${event.request.body}`)
   })
 
   stream.on('error', (event) => {
-    console.error(`[ERROR] ${event.message} with reply ${event.twitterReply}`)
+    process.send(`[ERROR] ${event.message} with reply ${event.twitterReply}`)
   })
+}
 
-})();
+mainThread();

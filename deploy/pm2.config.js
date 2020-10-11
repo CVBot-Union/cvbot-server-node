@@ -1,7 +1,7 @@
 module.exports = {
   apps: [{
     name: "twitter-stream-worker",
-    script: "./workers/twitter-stream/index.js",
+    script: "./workers/twitter-stream/daemon.js",
     args: "--env prod"
   },{
     name: "cvbot-app-server",
