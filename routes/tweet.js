@@ -33,6 +33,54 @@ router.get('/', async (req,res) => {
   }
 });
 
+router.get('/range', async (req,res) => {
+  let { page, limit, beforeID, afterID, sortKey } = req.query;
+  const { group } = req.query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+  if(sortKey !== 'DESC' && sortKey !== 'ASC'){
+    sortKey = 'DESC';
+  }
+  if(isNaN(page)){
+    page = 1;
+  }
+  if(isNaN(limit)) {
+    limit = 10;
+  }
+  if(beforeID && afterID) {
+    page = 1;
+    limit = 0;
+  }
+  if(afterID == null) {
+    afterID = '9999999999999999999';
+  }
+  if(beforeID == null) {
+    beforeID = '0';
+  }
+
+
+  try{
+    const filteredUser = await Tracker.find({ 'groups.id': mongoose.Types.ObjectId(group) }).select('uid');
+    const filterUid = filteredUser.map(x=> x.uid);
+    const docs = await Tweet
+    .find({
+      'user.id_str':  { $in: filterUid },
+      'id_str' : {
+        $lt: afterID,
+        $gt: beforeID
+      }
+    })
+    .sort({created_at: sortKey === 'DESC' ? -1 : 1})
+    .skip(limit * (page - 1))
+    .limit(limit);
+    handler(res ,null, docs);
+  }catch (e) {
+    handler(res, e.toString(), null);
+    throw e;
+  }
+});
+
 router.get('/:id', async (req,res) => {
   const { id } = req.params;
   const { groupID } = req.query;
