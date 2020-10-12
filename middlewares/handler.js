@@ -11,17 +11,10 @@ handler = (res,err,docs)=>{
         response: null
       })
     }else{
-      if(docs.userError){
-        res.status(400).json({
-          success:false,
-          response: docs.response
-        })
-      }else {
-        res.status(200).json({
-          success: true,
-          response: docs
-        })
-      }
+      res.status(200).json({
+        success: true,
+        response: docs
+      })
     }
   }
 };

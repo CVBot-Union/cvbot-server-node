@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
 
 router.get('/all', guard.checkIfAdmin, async(req, res) => {
   try {
-    const docs = await User.find({  }).select('username');
+    const docs = await User.find({  }).select('username userLevel');
     handler(res, null, docs);
   }catch (e) {
     handler(res, e.toString(), null);

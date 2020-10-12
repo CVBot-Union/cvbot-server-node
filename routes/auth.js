@@ -27,7 +27,7 @@ router.post('/login', async (req,res) => {
         username: userDoc.username
       }, process.env.JWT_SECRET);
       handler(res, null, {
-        token: token
+        token, uid: userDoc._id
       })
     }catch (e) {
       handler(res, e.toString(), null);

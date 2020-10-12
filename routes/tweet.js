@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.get('/', async (req,res) => {
   const { page, limit } = req.query;
-  const { group } = req.query;
+  const { group, user } = req.query;
 
   let pageInt = parseInt(page);
   let limitInt = parseInt(limit);
@@ -19,8 +19,13 @@ router.get('/', async (req,res) => {
   }
 
   try{
-    const filteredUser = await Tracker.find({ 'groups.id': mongoose.Types.ObjectId(group) }).select('uid');
-    const filterUid = filteredUser.map(x=> x.uid);
+    let filterUid;
+    if(user !== null) {
+      const filteredUser = await Tracker.find({ 'groups.id': mongoose.Types.ObjectId(group) }).select('uid');
+      filterUid = filteredUser.map(x=> x.uid);
+    }else{
+      filterUid = [user];
+    }
     const docs = await Tweet
     .find({ 'user.id_str':  { $in: filterUid } })
     .sort({created_at: -1})
@@ -34,23 +39,11 @@ router.get('/', async (req,res) => {
 });
 
 router.get('/range', async (req,res) => {
-  let { page, limit, beforeID, afterID, sortKey } = req.query;
-  const { group } = req.query;
+  let { beforeID, afterID, sortKey } = req.query;
+  const { group,user } = req.query;
 
-  page = parseInt(page);
-  limit = parseInt(limit);
   if(sortKey !== 'DESC' && sortKey !== 'ASC'){
     sortKey = 'DESC';
-  }
-  if(isNaN(page)){
-    page = 1;
-  }
-  if(isNaN(limit)) {
-    limit = 10;
-  }
-  if(beforeID && afterID) {
-    page = 1;
-    limit = 0;
   }
   if(afterID == null) {
     afterID = '9999999999999999999';
@@ -59,10 +52,15 @@ router.get('/range', async (req,res) => {
     beforeID = '0';
   }
 
-
   try{
-    const filteredUser = await Tracker.find({ 'groups.id': mongoose.Types.ObjectId(group) }).select('uid');
-    const filterUid = filteredUser.map(x=> x.uid);
+    let filterUid;
+    if(user !== null) {
+      const filteredUser = await Tracker.find({ 'groups.id': mongoose.Types.ObjectId(group) }).select('uid');
+      filterUid = filteredUser.map(x=> x.uid);
+    }else{
+      filterUid = [user];
+    }
+
     const docs = await Tweet
     .find({
       'user.id_str':  { $in: filterUid },
@@ -71,9 +69,7 @@ router.get('/range', async (req,res) => {
         $gt: beforeID
       }
     })
-    .sort({created_at: sortKey === 'DESC' ? -1 : 1})
-    .skip(limit * (page - 1))
-    .limit(limit);
+    .sort({created_at: sortKey === 'DESC' ? -1 : 1});
     handler(res ,null, docs);
   }catch (e) {
     handler(res, e.toString(), null);
