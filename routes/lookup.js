@@ -50,6 +50,7 @@ router.get('/avatar/id/:id', async (req,res) => {
       })
       .then(function (response) {
         var headers = {'Content-Type': 'image/png'};
+        res.set('Cache-Control', 'public, max-age=31557600'); // one year
         res.writeHead(200, headers);
         res.end(response.data, 'binary');
       })

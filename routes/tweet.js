@@ -39,17 +39,28 @@ router.get('/', async (req,res) => {
 });
 
 router.get('/range', async (req,res) => {
-  let { beforeID, afterID, sortKey } = req.query;
+  let { page, limit, beforeID, afterID, sortKey } = req.query;
   const { group,user } = req.query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
 
   if(sortKey !== 'DESC' && sortKey !== 'ASC'){
     sortKey = 'DESC';
   }
   if(afterID == null) {
     afterID = '9999999999999999999';
+    page = 0;
+    limit = 0;
   }
   if(beforeID == null) {
     beforeID = '0';
+  }
+  if(isNaN(page)){
+    page = 1;
+  }
+  if(isNaN(limit)) {
+    limit = 10;
   }
 
   try{
@@ -69,7 +80,9 @@ router.get('/range', async (req,res) => {
         $gt: beforeID
       }
     })
-    .sort({created_at: sortKey === 'DESC' ? -1 : 1});
+    .sort({created_at: sortKey === 'DESC' ? -1 : 1})
+    .skip(limit * (page - 1))
+    .limit(limit);
     handler(res ,null, docs);
   }catch (e) {
     handler(res, e.toString(), null);
