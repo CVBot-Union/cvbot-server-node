@@ -91,6 +91,11 @@ const mainThread = async() => {
       return;
     }
 
+    if(tweet.is_quote_status) {
+      console.debug(`[Debug] Rejected Tweet from ${tweet.user.screen_name}(${tweet.user.id_str}), is a RT.`);
+      return;
+    }
+
     Tweet.create({...tweet}, async (err, docs)=>{
       if(err){
         if(err.code === 11000) {
