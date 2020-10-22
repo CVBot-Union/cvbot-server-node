@@ -99,11 +99,12 @@ router.get('/:id/meta', async (req,res) => {
   const { id } = req.params;
   try {
     const doc = await RTGroup.findOne({ _id: mongoose.Types.ObjectId(id)}).select('name property');
-    let userKV = await Tracker.find({ groups: { $elemMatch: { id: doc._id } } }).select('groups');
+    let userKV = await Tracker.find({ groups: { $elemMatch: { id: doc._id } } }).select('groups uid');
     userKV = userKV.map(elm => {
-      return elm.groups.filter(group => {
+      let kv = elm.groups.filter(group => {
         return group.id + '' === doc._id + '';
       })[0];
+      return Object.assign({ uid: elm.uid }, kv._doc)
     });
     handler(res,null, {group: doc, userKV: userKV});
   }catch (e) {

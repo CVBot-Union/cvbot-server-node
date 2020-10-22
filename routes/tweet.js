@@ -20,7 +20,7 @@ router.get('/', async (req,res) => {
 
   try{
     let filterUid;
-    if(user !== null) {
+    if(user !== null && user === 'null') {
       const filteredUser = await Tracker.find({ 'groups.id': mongoose.Types.ObjectId(group) }).select('uid');
       filterUid = filteredUser.map(x=> x.uid);
     }else{
@@ -96,11 +96,11 @@ router.get('/:id', async (req,res) => {
   try {
     const doc = await Tweet.findOne({ id_str: id});
     const filteredUser = await Tracker.findOne({
-      'groups.id': mongoose.Types.ObjectId(groupID),
       'uid': doc._doc.user.id_str
-    }).select('name nickname');
+    });
+    const filterUserNicknameIdx = filteredUser.groups.map(e => e.id).indexOf(groupID);
     const mergedResponse = {
-      ...doc._doc, userNickname: filteredUser
+      ...doc._doc, userNickname: filteredUser.groups[filterUserNicknameIdx]
     }
     handler(res, null, mergedResponse);
   }catch (e) {

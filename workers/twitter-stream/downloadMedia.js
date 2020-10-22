@@ -68,7 +68,6 @@ const downloadImage = async ({media_url_https,id_str }) =>{
     const imgUploadParam = { ...bucketParams, Key: 'images/'+ id_str + '.png', Body: imgBuff, ContentType: 'application/x-png' };
     return await s3.upload(imgUploadParam).promise();
   }catch (e) {
-    console.error(e);
     console.error('[ERROR] Fail to download media(photo) from twitter.')
   }
 };
