@@ -41,7 +41,7 @@ router.get('/display_name/:name', (req, res) => {
   });
 });
 
-router.get('/avatar/id/:id', async (req,res) => {
+router.get('/avatar/id/:id.png', async (req,res) => {
     T.get('users/show', { user_id: req.params.id}, (err,data)=>{
       axios({
         method: 'get',
