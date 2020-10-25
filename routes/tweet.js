@@ -28,7 +28,7 @@ router.get('/', async (req,res) => {
     }
     const docs = await Tweet
     .find({ 'user.id_str':  { $in: filterUid } })
-    .sort({created_at: -1})
+    .sort({timestamp_ms: -1})
     .skip(limitInt * (pageInt - 1))
     .limit(limitInt);
     handler(res ,null, docs);
@@ -80,7 +80,7 @@ router.get('/range', async (req,res) => {
         $gt: beforeID
       }
     })
-    .sort({created_at: sortKey === 'DESC' ? -1 : 1})
+    .sort({timestamp_ms: sortKey === 'DESC' ? -1 : 1})
     .skip(limit * (page - 1))
     .limit(limit);
     handler(res ,null, docs);

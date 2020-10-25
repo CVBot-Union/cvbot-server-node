@@ -1,10 +1,12 @@
 const express = require('express');
 const axios = require('axios');
 const { guard,handler } = require('../middlewares');
+const workerURL = 'http://' + process.env.WORKER_IP + ':' +
+    process.env.WORKER_PORT + '/';
 const router = express.Router();
 
 router.get('/worker',  async(req, res) => {
-  axios.get('http://localhost:' + process.env.WORKER_PORT + '/')
+  axios.get(workerURL)
       .then(res => res.data)
       .then(data => {
         handler(res, null, data)
@@ -15,7 +17,7 @@ router.get('/worker',  async(req, res) => {
 });
 
 router.patch('/worker', guard.checkIfAdmin, async (req,res) => {
-  axios.patch('http://localhost:' + process.env.WORKER_PORT + '/')
+  axios.patch(workerURL)
   .then(res => res.data)
   .then(data => {
     handler(res, null, data)
@@ -26,7 +28,7 @@ router.patch('/worker', guard.checkIfAdmin, async (req,res) => {
 });
 
 router.post('/worker', guard.checkIfAdmin, async (req,res) => {
-  axios.post('http://localhost:' + process.env.WORKER_PORT + '/')
+  axios.post(workerURL)
   .then(res => res.data)
   .then(data => {
     handler(res, null, data)
