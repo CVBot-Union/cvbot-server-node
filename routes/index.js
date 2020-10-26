@@ -7,5 +7,6 @@ module.exports = {
   trackerRouter: require('./tracker'),
   lookupRouter: require('./lookup'),
   authRouter: require('./auth'),
+  statRouter: require('./stat'),
   settingRouter: require('./setting')
 }
