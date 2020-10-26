@@ -190,6 +190,17 @@ router.post('/join/:groupID', async (req,res) => {
     }
 });
 
-
+router.get('/:id/head', async (req,res) => {
+  const { id } = req.params;
+  try {
+    const doc = await RTGroup.findOne({
+      _id: mongoose.Types.ObjectId(id)
+    }).select('name property');
+    handler(res, null, doc);
+  }catch (e) {
+    handler(res, e.toString(), null);
+    throw e;
+  }
+});
 
 module.exports = router;

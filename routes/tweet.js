@@ -124,7 +124,8 @@ router.get('/:id/translations', async (req,res) => {
         ...each._doc,
         author: {
           name: userInfo._doc.username,
-          group: rtGroupInfo._doc.name
+          group: rtGroupInfo._doc.name,
+          id: each.author.id
         }
       };
     });
@@ -161,8 +162,12 @@ router.put('/:id/translation', guard.checkIfUserIsInSessionGroup, async (req,res
 
 router.delete('/:id/translation/:translationID', async (req,res) => {
   const { id, translationID } = req.params;
+  console.log(req.user._id)
   try {
-    const putTranslation = await Tweet.update({ id_str: id }, {
+    const putTranslation = await Tweet.updateOne({
+      id_str: id,
+      "translations.author.id": mongoose.Types.ObjectId(req.user._id + '')
+    }, {
       $pull: {
         translations: {
           _id: mongoose.Types.ObjectId(translationID)
