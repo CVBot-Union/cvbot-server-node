@@ -15,9 +15,9 @@ const UserSchema = mongoose.Schema({
     type: String,
     required: true
   }],
-  userLevel: {
-    type: Number,
-    default: 0
+  isManager: {
+    type: Boolean,
+    default: false
   }
 });
 
