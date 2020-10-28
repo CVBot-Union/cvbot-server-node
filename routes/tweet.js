@@ -38,6 +38,33 @@ router.get('/', async (req,res) => {
   }
 });
 
+router.get('/timeline-behind-count', async (req,res) => {
+    const { afterID, group, user } = req.query;
+    try{
+      let filterUid;
+      if(user !== null) {
+        const filteredUser = await Tracker.find({ 'groups.id': mongoose.Types.ObjectId(group) }).select('uid');
+        filterUid = filteredUser.map(x=> x.uid);
+      }else{
+        filterUid = [user];
+      }
+
+      let docs = await Tweet
+      .find({
+        'user.id_str':  { $in: filterUid },
+        'id_str' : {
+          $gt: afterID
+        }
+      })
+      .countDocuments();
+      handler(res ,null, docs);
+
+    }catch (e) {
+      handler(res, e.toString(), null);
+      throw e;
+    }
+});
+
 router.get('/range', async (req,res) => {
   let { page, limit, beforeID, afterID, sortKey } = req.query;
   const { group,user } = req.query;
@@ -162,7 +189,6 @@ router.put('/:id/translation', guard.checkIfUserIsInSessionGroup, async (req,res
 
 router.delete('/:id/translation/:translationID', async (req,res) => {
   const { id, translationID } = req.params;
-  console.log(req.user._id)
   try {
     const putTranslation = await Tweet.updateOne({
       id_str: id,

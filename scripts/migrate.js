@@ -9,7 +9,7 @@ const initUserPassword = 'superpassword';
     const userCreate = await User.create({
       username: 'superuser',
       password: bcrypt.hashSync(initUserPassword, 4),
-      userLevel: 1
+      isManager: true
     });
     console.log(`User Created: ${userCreate.username} with password: ${initUserPassword}`);
   }catch (e) {

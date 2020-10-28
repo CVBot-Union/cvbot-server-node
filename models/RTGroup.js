@@ -16,17 +16,10 @@ const RTGroupSchema = mongoose.Schema({
     dutyDescription: {
       type: String,
       default: "组员"
-    }
-  }],
-  leaders: [{
-    id: {
-      type: mongoose.Types.ObjectId,
-      required: true,
-      index: 1
     },
-    dutyDescription: {
-      type: String,
-      default: "组长"
+    isManager: {
+      type: Boolean,
+      default: false
     }
   }],
   property: {

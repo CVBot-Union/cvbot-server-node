@@ -49,7 +49,7 @@ router.post('/login', async (req,res) => {
       }
       const token = jwt.sign({
         _id: userDoc._id,
-        userLevel: userDoc.userLevel,
+        isManager: userDoc._doc.isManager,
         username: userDoc.username,
       }, process.env.JWT_SECRET);
       handler(res, null, {

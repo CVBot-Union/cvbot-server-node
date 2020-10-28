@@ -1,6 +1,6 @@
 const express = require('express');
 const { handler } = require('../middlewares')
-const { Tracker } = require('../models')
+const { Tracker, RTGroup } = require('../models')
 const router = express.Router();
 
 router.get('/', async (req, res) => {
@@ -28,7 +28,19 @@ router.get('/:uid', async (req,res) => {
   const { uid } = req.params;
   try{
     const doc = await Tracker.findOne({ uid });
-    handler(res, null, doc);
+    const groupKV = await doc.groups.map(async elm => {
+      const groupName = await RTGroup.findOne({
+        _id: elm.id
+      }).select('name');
+      return Object.assign({ id: elm.id }, {
+        name: groupName.name,
+        nickname: elm.nickname
+      })
+    })
+    const resolvedKV = await Promise.all(groupKV);
+    const mergedKV = {...doc._doc};
+    mergedKV.groups = resolvedKV;
+    handler(res, null, mergedKV);
   }catch (e) {
     handler(res, e.toString(), null);
     throw e;

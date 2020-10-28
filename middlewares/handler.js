@@ -5,7 +5,7 @@ handler = (res,err,docs)=>{
       response:err
     })
   }else{
-    if(!docs){
+    if(!docs && (docs !== 0)){
       res.status(400).json({
         success:false,
         response: null

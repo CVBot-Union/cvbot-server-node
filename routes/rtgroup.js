@@ -47,11 +47,11 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req,res) => {
-  const { name, description, members, leaders } = req.body;
+  const { name, description, members } = req.body;
   try {
     const doc = await  RTGroup.create({ name, property: {
       description
-      }, members, leaders });
+      }, members });
     handler(res, null, doc);
   }catch (e) {
     handler(res, e.toString(), null);
@@ -87,30 +87,40 @@ router.patch('/:id', async (req,res) => {
 router.get('/:id', async (req,res) => {
     const { id } = req.params;
     try {
-      const doc = await RTGroup.findOne({ _id: mongoose.Types.ObjectId(id)});
-      handler(res,null,doc);
+      const groupDoc = await RTGroup.findOne({ _id: mongoose.Types.ObjectId(id)});
+      const trackerKV = await Tracker.find({ groups: { $elemMatch: { id: groupDoc._id } } }).select('groups uid');
+      const mergedTrackerKV = trackerKV.map(elm => {
+        let kv = elm.groups.filter(group => {
+          return group.id + '' === groupDoc._id + '';
+        })[0];
+        return Object.assign({ uid: elm.uid }, kv._doc)
+      });
+      const memberKV = await groupDoc.members.map(async elm => {
+        const userInfo = await User.findOne({
+          _id: elm.id
+        }).select('username');
+        if (userInfo === null) {
+          return null;
+        }
+        return Object.assign({ id: elm.id }, {
+          username: userInfo.username,
+          isManager: elm.isManager,
+          job: elm.dutyDescription
+        })
+      });
+      const resolvedMemberKV = await Promise.all(memberKV);
+      let mergedDoc = {
+        ...groupDoc._doc
+      };
+      mergedDoc.members = resolvedMemberKV;
+      mergedDoc.trackers = mergedTrackerKV;
+      mergedDoc.avatarURL = mergedDoc.property.icon;
+      mergedDoc.members_str = resolvedMemberKV.map(e => e.id);
+      handler(res,null, mergedDoc);
     }catch (e) {
       handler(res, e.toString(), null);
       throw e;
     }
-});
-
-router.get('/:id/meta', async (req,res) => {
-  const { id } = req.params;
-  try {
-    const doc = await RTGroup.findOne({ _id: mongoose.Types.ObjectId(id)}).select('name property');
-    let userKV = await Tracker.find({ groups: { $elemMatch: { id: doc._id } } }).select('groups uid');
-    userKV = userKV.map(elm => {
-      let kv = elm.groups.filter(group => {
-        return group.id + '' === doc._id + '';
-      })[0];
-      return Object.assign({ uid: elm.uid }, kv._doc)
-    });
-    handler(res,null, {group: doc, userKV: userKV});
-  }catch (e) {
-    handler(res, e.toString(), null);
-    throw e;
-  }
 });
 
 router.delete('/:id', async (req,res) => {
@@ -121,73 +131,30 @@ router.delete('/:id', async (req,res) => {
       handler(res, "Group Not Found.", null);
       return;
     }
-    const deleteTracker = await Tracker.update({} , {
-      $pull: {
-        'groups.id': deleteGroup._id
-      }
-    },{ multi: true});
+    const targetTracker = await Tracker.find({
+      'groups.id': deleteGroup._id
+    }).select('_id');
+    const deleteTargetTracker = targetTracker.map(async elm=> {
+      const tempTracker = await Tracker.findOne({_id: elm._id});
+      const tempTrackerIds = tempTracker.groups.map(e => e.id + '');
+      const tempIdx = tempTrackerIds.indexOf(deleteGroup._id + '');
+      const clearTracker = JSON.parse(JSON.stringify(tempTracker));
+      const shadowTracker = clearTracker.groups;
+      shadowTracker.splice(tempIdx, 1);
+      clearTracker.groups = shadowTracker;
+      return await Tracker.update({
+        _id: elm._id
+      }, clearTracker, {new: false});
+    })
+    const resolvedDeletion = Promise.all(deleteTargetTracker);
     handler(res, null, {
       group: deleteGroup,
-      trackers: deleteTracker
+      trackers: resolvedDeletion
     })
   } catch (e) {
     handler(res, e.toString(), null);
     throw e;
   }
-});
-
-router.post('/join/:groupID', async (req,res) => {
-    const { groupID } = req.params;
-    const { id, dutyDescription, type } = req.body;
-    try{
-      const userCheckResult = await User.findOne({ _id: mongoose.Types.ObjectId(id) });
-      if(userCheckResult === null) {
-        handler(res, 'User Does Not Exist', null);
-        return;
-      }
-      const groupCheckResult = await RTGroup.findOne({ _id: mongoose.Types.ObjectId(groupID)});
-      if(groupCheckResult === null) {
-        handler(res, 'Group Does Not Exist', null);
-        return;
-      }
-      const membersIdx= groupCheckResult.members.map(e=>e.id + '').indexOf(id);
-      const leadersIdx= groupCheckResult.leaders.map(e=>e.id + '').indexOf(id);
-      if(membersIdx !== -1 || leadersIdx !== -1) {
-        handler(res, 'Already Joined!', null);
-        return;
-      }
-
-      if(type === 'leader'){
-        const joinDoc = await RTGroup.findOneAndUpdate({
-          _id: mongoose.Types.ObjectId(groupID)
-        },{
-          $push: {
-            leaders: {
-              id: mongoose.Types.ObjectId(id),
-              dutyDescription
-            }
-          }
-        });
-        handler(res, null, joinDoc);
-      }else if(type === 'member'){
-        const joinDoc = await RTGroup.findOneAndUpdate({
-          _id: mongoose.Types.ObjectId(groupID)
-        },{
-          $push: {
-            members: {
-              id: mongoose.Types.ObjectId(id),
-              dutyDescription
-            }
-          }
-        });
-        handler(res, null, joinDoc);
-      } else{
-        handler(res, 'Join Type Incorrect', null);
-      }
-    }catch (e) {
-      handler(res, e.toString(), null);
-      throw e;
-    }
 });
 
 router.get('/:id/head', async (req,res) => {
