@@ -75,10 +75,12 @@ router.get('/range', async (req,res) => {
   if(sortKey !== 'DESC' && sortKey !== 'ASC'){
     sortKey = 'DESC';
   }
-  if(afterID == null) {
-    afterID = '9999999999999999999';
+  if(afterID !== undefined && beforeID !== undefined) {
     page = 0;
     limit = 0;
+  }
+  if(afterID == null) {
+    afterID = '9999999999999999999';
   }
   if(beforeID == null) {
     beforeID = '0';
