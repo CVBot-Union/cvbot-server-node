@@ -127,10 +127,18 @@ router.get('/:id', async (req,res) => {
     const filteredUser = await Tracker.findOne({
       'uid': doc._doc.user.id_str
     });
-    const filterUserNicknameIdx = filteredUser.groups.map(e => e.id).indexOf(groupID);
-    const mergedResponse = {
-      ...doc._doc, userNickname: filteredUser.groups[filterUserNicknameIdx]
+    let mergedResponse;
+    if(filteredUser !== null){
+      const filterUserNicknameIdx = filteredUser.groups.map(e => e.id).indexOf(groupID);
+      mergedResponse = {
+        ...doc._doc, userNickname: filteredUser.groups[filterUserNicknameIdx]
+      }
+    }else{
+      mergedResponse = {
+        ...doc._doc, userNickname: doc._doc.user.name
+      }
     }
+
     handler(res, null, mergedResponse);
   }catch (e) {
     handler(res, e.toString(), null);
