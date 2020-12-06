@@ -128,10 +128,10 @@ router.get('/:id', async (req,res) => {
       'uid': doc._doc.user.id_str
     });
     let mergedResponse;
-    if(filteredUser !== null){
+    if(filteredUser !== null && (groupID !== undefined)){
       const filterUserNicknameIdx = filteredUser.groups.map(e => e.id).indexOf(groupID);
       mergedResponse = {
-        ...doc._doc, userNickname: filteredUser.groups[filterUserNicknameIdx]
+        ...doc._doc, userNickname: filteredUser.groups[filterUserNicknameIdx].nickname
       }
     }else{
       mergedResponse = {
@@ -200,9 +200,10 @@ router.put('/:id/translation', guard.checkIfUserIsInSessionGroup, async (req,res
 router.delete('/:id/translation/:translationID', async (req,res) => {
   const { id, translationID } = req.params;
   try {
+    // todo: auth the deleter is the author/ group manager
     const putTranslation = await Tweet.updateOne({
       id_str: id,
-      "translations.author.id": mongoose.Types.ObjectId(req.user._id + '')
+      "translations.author.id": mongoose.Types.ObjectId(req.user._id)
     }, {
       $pull: {
         translations: {

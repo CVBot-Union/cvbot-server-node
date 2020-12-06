@@ -16,7 +16,15 @@ const TweetSchema = mongoose.Schema({
       },
       groupID: {
         type: mongoose.Types.ObjectId
-      }
+      },
+      group: {
+        type: String,
+        default: ">>> Waiting to be resolved! <<<"
+      },
+      name: {
+        type: String,
+        default: ">>> Waiting to be resolved! <<<"
+      },
     },
     createdAt: {
       type: Date
