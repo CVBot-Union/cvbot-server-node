@@ -73,8 +73,17 @@ const getUserInfoAndRTGroupInfoRoutine = async (userID) => {
   userInfoDoc.password = undefined;
   const rtgroupDocs = await RTGroup.find({
         'members.id': userInfoDoc._id
-      }).select('name property');
-  return {user: userInfoDoc, rtgroups: rtgroupDocs};
+      }).select('name property members');
+  const extractedManagerDoc = await rtgroupDocs.map(async group => {
+    let shadowGroup = group;
+    const groupMemberIdx = group.members.map(e => e.id).indexOf(userID);
+    return Object.assign(shadowGroup._doc, {
+      isManager: group.members[groupMemberIdx].isManager,
+      members: undefined
+    });
+  });
+  const resolvedExtractedManagerDoc = await Promise.all(extractedManagerDoc)
+  return {user: userInfoDoc, rtgroups: resolvedExtractedManagerDoc};
 }
 
 module.exports = router;
