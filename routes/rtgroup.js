@@ -64,7 +64,7 @@ router.post('/icon/:id', uploadGroupIcon.single('icon'), async (req,res) => {
     try {
       const doc = await RTGroup.findOneAndUpdate({
         _id: mongoose.Types.ObjectId(id)
-      }, { 'property.icon': req.file.location }, {new :true});
+      }, { 'property.icon': process.env.S3_ENTRY + '/' + req.file.key }, {new :true});
       handler(res, null, doc);
     }catch (e) {
       handler(res, e.toString(), null);
